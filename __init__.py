@@ -21,7 +21,7 @@ import numpy as np
     title="Exponential Distance Saturation",
     tags=["image", "color", "desaturation", "saturation"],
     category="image",
-    version="1.0.0",
+    version="1.2.0",
 )
 class ExponentialDesaturationInvocation(BaseInvocation):
     """
@@ -37,7 +37,7 @@ class ExponentialDesaturationInvocation(BaseInvocation):
         input=Input.Connection,
     )
     strength: float = InputField(
-        title="Target Saturation",
+        title="Saturation Multiplier",
         description="How much to change the saturation of the target hue",
         ge=0,
         default=0,
