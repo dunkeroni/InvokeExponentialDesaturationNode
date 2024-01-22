@@ -1,11 +1,12 @@
 # InvokeExponentialDesaturationNode
-A node that can desaturate an image based on a target color
+A node that can desaturate an image based on a target color (specifically its Hue)
 
-This node converts the image to HSV value, and then desaturates all colors based on the input strength and and an exponential distance calculation.  
+This node converts the image to HSV value, and then scales the saturation of all colors based on the input multiplier and an exponential distance calculation.  
 **Color**: The input Color to target. Use the Color Primitive node to select one.  
 **Image**: The image to apply the changes to.  
-**Strength**: How strong to desaturate. A strength of 1 will turn the target color into greyscale. 0 will do nothing.  
-**Exponent**: How close to the target color pixels in the image need to be in order to desaturate. Higher numbers will make the target color more precise.  
+**Target Saturation**: How much to multiply the target color's saturation by. 
+**Buffer**: How far from the target hue before the exponential distance calculation takes effect. You can apply a form of clamping by adding a buffer to control distance and using a high exponent so that the effect falls off immediately.
+**Exponent**: How close to the target color pixels in the image need to be in order to be affected. Higher numbers will make the target color more precise.  
 **Preserve Luminosity**: Since HSV Desaturation makes the affected parts of the image lighter, enable this to keep the greyscale brightness the same in the result.  
 **Invert Result**: Preserve the target color and desaturate everything else.  
 

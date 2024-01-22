@@ -18,8 +18,8 @@ import numpy as np
 
 @invocation(
     "distance_desaturation",
-    title="Exponential Distance Desaturation",
-    tags=["image", "color", "desaturation"],
+    title="Exponential Distance Saturation",
+    tags=["image", "color", "desaturation", "saturation"],
     category="image",
     version="1.0.0",
 )
@@ -37,15 +37,21 @@ class ExponentialDesaturationInvocation(BaseInvocation):
         input=Input.Connection,
     )
     strength: float = InputField(
-        title="Strength",
-        description="How strongly to apply the desaturation",
-        le=1,
+        title="Target Saturation",
+        description="How much to change the saturation of the target hue",
         ge=0,
-        default=1,
+        default=0,
+        )
+    buffer: float = InputField(
+        title="Buffer",
+        description="Expands the target hue to include colors that are close to the target hue. 0 is no buffer, 0.5 includes all colors.",
+        le=0.5,
+        ge=0,
+        default=0,
         )
     exponent: float = InputField(
         title="Exponent",
-        description="Affects how close to the selected color the desaturation will be applied",
+        description="How quickly the desaturation falls off from the target hue",
         ge=1,
         default=10,
         )
@@ -63,7 +69,7 @@ class ExponentialDesaturationInvocation(BaseInvocation):
     def invoke(self, context: InvocationContext) -> ImageOutput:
         image = context.services.images.get_pil_image(self.image.image_name)
         color = self.color.tuple()
-        saturation_target = 1 - self.strength
+        saturation_target = self.strength
 
         #get the luminosity channel of the original input image as a numpy array
         """ NOTE: PIL likes to pretend that it can't convert from RGB to LAB, but it can.
@@ -85,10 +91,11 @@ class ExponentialDesaturationInvocation(BaseInvocation):
         # Adjust the Saturation channel based on the distance squared between the Hue and the hue of the color input
         hue_difference = np.abs(image[:, :, 0] - color[0])
         hue_difference = np.minimum(hue_difference, 1 - hue_difference) # wrap around the hue circle, so that the hue difference is always between 0 and 0.5
+        hue_difference = np.maximum(hue_difference - self.buffer, 0) # extend the target hue to include colors that are close to the target hue
         hue_scaling = (1 - (2 * hue_difference)) ** self.exponent # scale the hue difference so that it is 1 near the target hue and 0 far away
         if self.invert_result:
             hue_scaling = 1 - hue_scaling
-        image[:, :, 1] = image[:, :, 1] * (saturation_target * hue_scaling + (1 - hue_scaling))
+        image[:, :, 1] = np.minimum(image[:, :, 1] * (saturation_target * hue_scaling + (1 - hue_scaling)), 1)
 
         # Convert the image back to RGB
         image = Image.fromarray((image * 255).astype(np.uint8), mode="HSV")
